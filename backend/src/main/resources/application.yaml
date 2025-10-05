@@ -1,0 +1,22 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /real_estate
+spring:
+  datasource:
+    url: ${DBMS_CONNECTION:jdbc:mysql://localhost:3308/real_estate_db}
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+    username: ${DBMS_USERNAME:root}
+    password: ${DBMS_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+jwt:
+  signerKey : "sqrFCjvyZ4h1rpTS67vRV2EDOsi/wE1iHvJ+4/FlXfSIdTjfApB1wLxIQpL38psO"
+  valid-duration : 3600
+  refresh-duration : 36000

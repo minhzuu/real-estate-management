@@ -1,0 +1,52 @@
+# --- OS / File system ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- IDE / Editors ---
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+
+# --- Logs / PIDs ---
+*.log
+logs/
+*.pid
+
+# --- Environment files ---
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+backend/.env
+
+# --- Node / Frontend (Vite + React) ---
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.eslintcache
+
+# --- TypeScript build info (if used) ---
+*.tsbuildinfo
+
+# --- Java / Maven / Spring Boot ---
+backend/target/
+**/target/
+**/out/
+*.class
+*.jar
+*.war
+*.ear
+
+# --- Coverage / Caches / Temp ---
+coverage/
+dist/
+tmp/
+.cache/
+
+
