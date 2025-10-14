@@ -151,54 +151,116 @@ CREATE TABLE assignmentbuilding (
 );
 
 -- ==========================================
--- DỮ LIỆU MẪU
+-- DỮ LIỆU MẪU CHO real_estate_db
 -- ==========================================
 
--- District
-INSERT INTO district(name) VALUES ('Quận 1'), ('Quận 2'), ('Quận 3');
+-- ====== 1. District ======
+INSERT INTO district (name)
+VALUES 
+('Quận 1'),
+('Quận 2'),
+('Quận 3');
 
--- Building
-INSERT INTO building (name, street, ward, structure, numberOfBasement, floorArea, rentPrice, serviceFee, brokerageFee, district_id, image)
+-- ==========================================
+-- 2. building 
+-- ==========================================
+
+INSERT INTO building (
+    name, street, ward, structure, number_of_basement, floor_area,
+    rent_price, rent_price_description, service_fee, car_fee, motorbike_fee,
+    overtime_fee, water_fee, electricity_fee, deposit, payment, rent_time,
+    decoration_time, brokerage_fee, type, note, link_of_building, map, image,
+    created_by, modified_by, district_id
+)
 VALUES
-    ('Alpha Tower', 'Nguyen Hue', 'Ben Nghe', 'Steel', 2, 1000, 5000, 'Free water', '10%', 1, 'alpha.png'),
-    ('Beta Building', 'Le Loi', 'Ben Thanh', 'Concrete', 3, 1500, 8000, 'Free cleaning', '12%', 1, 'beta.png'),
-    ('Gamma Plaza', 'Tran Hung Dao', 'Co Giang', 'Steel-Concrete', 1, 1200, 6000, 'Free parking', '8%', 2, 'gamma.png');
+-- Alpha Tower
+('Alpha Tower', 'Nguyen Hue', 'Ben Nghe', 'Steel', 2, 1200,
+ 5500, 'Giá đã bao gồm VAT', 'Miễn phí vệ sinh', '150$', '50$', 
+ '20$', 'Miễn phí', 'Theo giá EVN', '2 tháng', 'Chuyển khoản', '1 năm', 
+ '1 tháng', '10%', 'Văn phòng', 'Tòa nhà hiện đại trung tâm Q1', 
+ 'https://alpha.vn', 'https://goo.gl/maps/alpha', 'alpha.png', 
+ 'admin', 'admin', 1),
 
--- Rentarea
-INSERT INTO rentarea (value, building_id) VALUES
-                                              (100, 1), (200, 1), (150, 2), (250, 3);
+-- Beta Building
+('Beta Building', 'Le Loi', 'Ben Thanh', 'Concrete', 3, 900,
+ 8000, 'Bao gồm nước', 'Miễn phí dọn dẹp', '180$', '60$', 
+ '25$', 'Miễn phí', 'Theo hóa đơn', '3 tháng', 'Tiền mặt', '6 tháng', 
+ '2 tháng', '12%', 'Văn phòng nhỏ', 'Vị trí thuận tiện gần chợ Bến Thành', 
+ 'https://beta.vn', 'https://goo.gl/maps/beta', 'beta.png', 
+ 'admin', 'admin', 1),
 
--- Renttype
-INSERT INTO renttype (name) VALUES ('Nguyên căn'), ('Tầng'), ('Phòng'), ('Khu vực');
+-- Gamma Plaza
+('Gamma Plaza', 'Tran Hung Dao', 'Co Giang', 'Steel-Concrete', 1, 1500,
+ 6000, 'Chưa VAT', 'Free parking', '200$', '80$', 
+ '30$', 'Miễn phí', 'Theo giá điện lực', '1 tháng', 'Chuyển khoản', '1 năm', 
+ '3 tuần', '8%', 'Tòa nhà hỗn hợp', 'Kết hợp văn phòng và thương mại', 
+ 'https://gamma.vn', 'https://goo.gl/maps/gamma', 'gamma.png', 
+ 'manager01', 'manager01', 2);
 
--- Building-Renttype mapping
-INSERT INTO buildingrenttype VALUES
-                                 (1,1), (1,2), (2,2), (3,3), (3,4);
+-- ====== 3. Rentarea ======
+INSERT INTO rentarea (value, building_id)
+VALUES
+(100, 1),
+(200, 1),
+(150, 2),
+(250, 3);
 
--- Role
-INSERT INTO role(name) VALUES ('Admin'), ('Staff'), ('Manager');
+-- ====== 4. Renttype ======
+INSERT INTO renttype (name)
+VALUES 
+('Nguyên căn'),
+('Tầng'),
+('Phòng'),
+('Khu vực');
 
--- User
-INSERT INTO user (username, password, fullname, status, avatar, role_id) VALUES
-                                                                             ('admin', '123456', 'Nguyen Van Admin', 1, 'admin.png', 1),
-                                                                             ('staff01', '123456', 'Tran Van Staff', 1, 'staff01.png', 2),
-                                                                             ('manager01', '123456', 'Le Thi Manager', 1, 'manager01.png', 3);
+-- ====== 5. Building-Renttype mapping ======
+INSERT INTO buildingrenttype (building_id, renttype_id)
+VALUES
+(1, 1),
+(1, 2),
+(2, 2),
+(3, 3),
+(3, 4);
 
--- Assignment building
-INSERT INTO assignmentbuilding VALUES
-                                   (2,1), -- staff01 quản lý Alpha Tower
-                                   (2,2), -- staff01 quản lý Beta Building
-                                   (3,3); -- manager01 quản lý Gamma Plaza
+-- ====== 6. Role ======
+INSERT INTO role (name)
+VALUES
+('Admin'),
+('Staff'),
+('Manager');
 
--- Customer
-INSERT INTO customer(fullname, phone, email, companyName, demand) VALUES
-                                                                      ('Nguyen Van A', '0909123456', 'a@gmail.com', 'Công ty A', 'Thuê nguyên căn'),
-                                                                      ('Tran Thi B', '0912345678', 'b@gmail.com', 'Công ty B', 'Thuê phòng nhỏ');
+-- ====== 7. User ======
+INSERT INTO user (username, password, fullname, status, avatar, role_id)
+VALUES
+('admin', '123456', 'Nguyen Van Admin', 1, 'admin.png', 1),
+('staff01', '123456', 'Tran Van Staff', 1, 'staff01.png', 2),
+('manager01', '123456', 'Le Thi Manager', 1, 'manager01.png', 3);
 
--- Transaction type
-INSERT INTO transactiontype(name) VALUES ('Tư vấn'), ('Ký hợp đồng');
+-- ====== 8. Assignment Building ======
+INSERT INTO assignmentbuilding (user_id, building_id)
+VALUES
+(2, 1), -- staff01 quản lý Alpha Tower
+(2, 2), -- staff01 quản lý Beta Building
+(3, 3); -- manager01 quản lý Gamma Plaza
 
--- Transaction
-INSERT INTO transaction(note, customer_id, staff_id, transactiontype_id) VALUES
-                                                                             ('Khách hàng quan tâm Alpha Tower', 1, 2, 1),
-                                                                             ('Đã ký hợp đồng tại Beta Building', 2, 2, 2);
+-- ====== 9. Customer ======
+INSERT INTO customer (fullname, phone, email, company_name, demand)
+VALUES
+('Nguyen Van A', '0909123456', 'a@gmail.com', 'Công ty A', 'Thuê nguyên căn'),
+('Tran Thi B', '0912345678', 'b@gmail.com', 'Công ty B', 'Thuê phòng nhỏ'),
+('Le Van C', '0933123123', 'c@gmail.com', 'Công ty C', 'Thuê văn phòng tầng 2');
+
+
+-- ====== 10. Transaction type ======
+INSERT INTO transactiontype (name)
+VALUES
+('Tư vấn'),
+('Ký hợp đồng'),
+('Chăm sóc khách hàng');
+
+-- ====== 11. Transaction ======
+INSERT INTO transaction (note, customer_id, staff_id, transactiontype_id)
+VALUES
+('Khách hàng A quan tâm Alpha Tower', 1, 2, 1),
+('Đã ký hợp đồng tại Beta Building', 2, 2, 2),
+('Gọi điện chăm sóc khách hàng C', 3, 2, 3);
