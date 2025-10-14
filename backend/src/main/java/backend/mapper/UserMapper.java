@@ -24,6 +24,7 @@ public interface UserMapper {
 
     @Mapping(target = "role", ignore = true)  // Handle role separately in service
     @Mapping(target = "password", ignore = true)  // Handle password separately in service
+    @Mapping(target = "username", ignore = true)  // Username cannot be changed
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "assignedBuildings", ignore = true)
     @Mapping(target = "transactions", ignore = true)

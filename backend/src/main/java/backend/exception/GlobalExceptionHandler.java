@@ -22,9 +22,9 @@ public class GlobalExceptionHandler {
     private static final String MIN_ATTRIBUTE = "min";
     
     @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse> handlingAppException(AppException e) {
+    ResponseEntity<ApiResponse<?>> handlingAppException(AppException e) {
         ErrorCode errorCode = e.getErrorCode();
-        ApiResponse response = new ApiResponse();
+        ApiResponse<?> response = new ApiResponse<>();
         response.setCode(errorCode.getCode());
         response.setMessage(errorCode.getMessage());
         return ResponseEntity
@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     }
     
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse> handlingMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+    ResponseEntity<ApiResponse<?>> handlingMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String enumKey =  e.getFieldError().getDefaultMessage();
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
         Map<String, Object> attribute = null;
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
             log.error("Error while processing validation exception", ex);
         }
 
-        ApiResponse response = new ApiResponse();
+        ApiResponse<?> response = new ApiResponse<>();
         response.setCode(errorCode.getCode());
         response.setMessage(Objects.nonNull(attribute) ?
                 mapAttribute(errorCode.getMessage(), attribute) : errorCode.getMessage()
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(value = AccessDeniedException.class)
-    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException e) {
+    ResponseEntity<ApiResponse<?>> handlingAccessDeniedException(AccessDeniedException e) {
        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
         return ResponseEntity
                 .status(errorCode.getStatusCode())
@@ -72,9 +72,9 @@ public class GlobalExceptionHandler {
     
     // This should be the last handler - catches all unhandled exceptions
     @ExceptionHandler(value = Exception.class)
-    ResponseEntity<ApiResponse> handlingRuntimeException(Exception e) {
+    ResponseEntity<ApiResponse<?>> handlingRuntimeException(Exception e) {
         log.error("Uncategorized Exception: ", e);
-        ApiResponse response = new ApiResponse();
+        ApiResponse<?> response = new ApiResponse<>();
         response.setCode(ErrorCode.UNCATEGORIZED.getCode());
         response.setMessage(ErrorCode.UNCATEGORIZED.getMessage());
         return ResponseEntity

@@ -36,6 +36,7 @@ public class District {
     private String name;
 
     @OneToMany(mappedBy = "district", cascade = CascadeType.ALL, orphanRemoval = false)
+    @Builder.Default
     private Set<Building> buildings = new LinkedHashSet<>();
 }
 
