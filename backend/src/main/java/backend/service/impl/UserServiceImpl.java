@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -100,15 +101,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse getMyInfo() {
-        // TODO: Implement after adding Spring Security authentication
-        // Get current authenticated user from SecurityContextHolder
-        // var authentication = SecurityContextHolder.getContext().getAuthentication();
-        // String username = authentication.getName();
-        // User user = userRepository.findByUsername(username)
-        //         .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
-        // return userMapper.toUserResponse(user);
-        throw new UnsupportedOperationException("Not implemented yet. Requires authentication setup.");
+    public UserResponse getMyInfo(){
+        var context = SecurityContextHolder.getContext();
+        String name = context.getAuthentication().getName();
+        User user = userRepository.findByUsername(name).orElseThrow(
+                () -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        return userMapper.toUserResponse(user);
     }
 
 

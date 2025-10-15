@@ -59,7 +59,7 @@ public class SecurityConfig {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
         // Cho phép origin dev frontend
-        corsConfiguration.addAllowedOriginPattern("http://localhost:3000");
+        corsConfiguration.addAllowedOriginPattern("http://localhost:5173");
 
         // Nếu muốn tạm mở cho mọi origin (CHỈ DEV): corsConfiguration.addAllowedOrigin("*");
         // Phương thức và header
