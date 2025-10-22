@@ -151,6 +151,17 @@ CREATE TABLE assignmentbuilding (
 );
 
 -- ==========================================
+-- 12. Bảng assignmentcustomer
+-- ==========================================
+CREATE TABLE assignmentcustomer (
+                                    user_id BIGINT,
+                                    customer_id BIGINT,
+                                    PRIMARY KEY (user_id, customer_id),
+                                    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+                                    FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
+);
+
+-- ==========================================
 -- DỮ LIỆU MẪU CHO real_estate_db
 -- ==========================================
 
@@ -226,8 +237,10 @@ VALUES
 INSERT INTO role (name)
 VALUES
 ('Admin'),
+('Manager'),
 ('Staff'),
-('Manager');
+('Viewer');
+
 
 -- ====== 7. User ======
 INSERT INTO user (username, password, fullname, status, avatar, role_id)
@@ -264,3 +277,10 @@ VALUES
 ('Khách hàng A quan tâm Alpha Tower', 1, 2, 1),
 ('Đã ký hợp đồng tại Beta Building', 2, 2, 2),
 ('Gọi điện chăm sóc khách hàng C', 3, 2, 3);
+
+-- ====== 12. Assignment Customer ======
+INSERT INTO assignmentcustomer (user_id, customer_id)
+VALUES
+(2, 1), -- staff01 phụ trách khách hàng Nguyen Van A
+(2, 2), -- staff01 phụ trách khách hàng Tran Thi B
+(3, 3); -- manager01 phụ trách khách hàng Le Van C

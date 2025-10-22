@@ -1,6 +1,7 @@
 package backend.service.impl;
 
 import backend.dto.request.AuthenticationRequest;
+import backend.dto.request.ChangePasswordRequest;
 import backend.dto.request.IntrospectRequest;
 import backend.dto.request.LogoutRequest;
 import backend.dto.request.RefreshToken;
@@ -25,6 +26,7 @@ import lombok.experimental.NonFinal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -144,6 +146,27 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         return signedJWT;
     }
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        var context = SecurityContextHolder.getContext();
+        String username = context.getAuthentication().getName();
+        
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTS));
+        
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        
+        // Kiểm tra mật khẩu cũ
+        boolean authenticated = passwordEncoder.matches(request.getOldPassword(), user.getPassword());
+        if(!authenticated){
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+        
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+    }
+    
     private String buildScope(User user){
         StringJoiner stringJoiner = new StringJoiner(" ");
         if(user.getRole() != null){

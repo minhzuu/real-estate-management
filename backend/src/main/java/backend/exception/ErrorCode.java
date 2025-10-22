@@ -17,7 +17,15 @@ public enum ErrorCode {
     UNAUTHENTICATED(1005, "Unauthenticated",HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(1006, "You do not have permission",HttpStatus.FORBIDDEN),
     ROLE_NOT_EXISTS(1007, "Role does not exist",HttpStatus.NOT_FOUND),
-    INVALID_KEY(1008, "Invalid key",HttpStatus.BAD_REQUEST)
+    INVALID_KEY(1008, "Invalid key",HttpStatus.BAD_REQUEST),
+    CUSTOMER_NOT_EXISTS(2001, "Customer does not exist",HttpStatus.NOT_FOUND),
+    CUSTOMER_EMAIL_EXISTS(2002, "Customer email already exists",HttpStatus.BAD_REQUEST),
+    CUSTOMER_PHONE_EXISTS(2003, "Customer phone already exists",HttpStatus.BAD_REQUEST),
+    BUILDING_NOT_EXISTS(3001, "Building does not exist",HttpStatus.NOT_FOUND),
+    BUILDING_NAME_EXISTS(3002, "Building name already exists",HttpStatus.BAD_REQUEST),
+    DISTRICT_NOT_EXISTS(3003, "District does not exist",HttpStatus.NOT_FOUND),
+    RENT_TYPE_NOT_EXISTS(3004, "Rent type does not exist",HttpStatus.NOT_FOUND),
+    RENT_TYPE_NAME_EXISTS(3005, "Rent type name already exists",HttpStatus.BAD_REQUEST)
     ;
     private final int code;
     private final String message;

@@ -15,6 +15,7 @@ import jakarta.transaction.Transactional;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -74,7 +75,7 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
-
+    @PreAuthorize("hasRole('Admin')")
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();

@@ -27,7 +27,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"role", "assignedBuildings", "transactions"})
+@ToString(exclude = {"role", "assignedBuildings", "assignedCustomers", "transactions"})
 @Entity
 @Table(name = "user")
 public class User {
@@ -60,6 +60,15 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "building_id")
     )
     private Set<Building> assignedBuildings = new LinkedHashSet<>();
+
+    @Builder.Default
+    @ManyToMany
+    @JoinTable(
+            name = "assignmentcustomer",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "customer_id")
+    )
+    private Set<Customer> assignedCustomers = new LinkedHashSet<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "staff")
