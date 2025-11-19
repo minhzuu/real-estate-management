@@ -1,13 +1,7 @@
 package backend.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -25,7 +19,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"assignedStaff", "transactions"})
+@ToString(exclude = {"createdBy", "assignedStaff", "transactions"})
 @Entity
 @Table(name = "customer")
 public class Customer {
@@ -51,6 +45,10 @@ public class Customer {
 
     @Column(name = "modifiedDate", insertable = false, updatable = false)
     private LocalDateTime modifiedDate;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 
     @Builder.Default
     @ManyToMany(mappedBy = "assignedCustomers")

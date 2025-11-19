@@ -21,6 +21,7 @@ public enum ErrorCode {
     CUSTOMER_NOT_EXISTS(2001, "Customer does not exist",HttpStatus.NOT_FOUND),
     CUSTOMER_EMAIL_EXISTS(2002, "Customer email already exists",HttpStatus.BAD_REQUEST),
     CUSTOMER_PHONE_EXISTS(2003, "Customer phone already exists",HttpStatus.BAD_REQUEST),
+    CUSTOMER_ACCESS_DENIED(2004, "You do not have permission to access this customer",HttpStatus.FORBIDDEN),
     BUILDING_NOT_EXISTS(3001, "Building does not exist",HttpStatus.NOT_FOUND),
     BUILDING_NAME_EXISTS(3002, "Building name already exists",HttpStatus.BAD_REQUEST),
     DISTRICT_NOT_EXISTS(3003, "District does not exist",HttpStatus.NOT_FOUND),

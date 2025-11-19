@@ -91,7 +91,9 @@ CREATE TABLE customer (
                           companyName VARCHAR(255),
                           demand TEXT,
                           createdDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                          modifiedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                          modifiedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                          created_by BIGINT,
+                          FOREIGN KEY (created_by) REFERENCES user(id) ON DELETE SET NULL
 );
 
 -- ==========================================
@@ -257,11 +259,11 @@ VALUES
 (3, 3); -- manager01 quản lý Gamma Plaza
 
 -- ====== 9. Customer ======
-INSERT INTO customer (fullname, phone, email, company_name, demand)
+INSERT INTO customer (fullname, phone, email, company_name, demand, created_by)
 VALUES
-('Nguyen Van A', '0909123456', 'a@gmail.com', 'Công ty A', 'Thuê nguyên căn'),
-('Tran Thi B', '0912345678', 'b@gmail.com', 'Công ty B', 'Thuê phòng nhỏ'),
-('Le Van C', '0933123123', 'c@gmail.com', 'Công ty C', 'Thuê văn phòng tầng 2');
+('Nguyen Van A', '0909123456', 'a@gmail.com', 'Công ty A', 'Thuê nguyên căn', 2),
+('Tran Thi B', '0912345678', 'b@gmail.com', 'Công ty B', 'Thuê phòng nhỏ', 2),
+('Le Van C', '0933123123', 'c@gmail.com', 'Công ty C', 'Thuê văn phòng tầng 2', 3);
 
 
 -- ====== 10. Transaction type ======

@@ -20,7 +20,7 @@ import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity  // Enable @PreAuthorize, @PostAuthorize, etc.
 public class SecurityConfig {
     private static final String[] PUBLIC_POST_ENDPOINTS = {
             "/users",
@@ -52,6 +52,8 @@ public class SecurityConfig {
     @Bean
     JwtAuthenticationConverter jwtAuthenticationConverter(){
         JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        // Set authority prefix to empty string because JWT scope already contains "ROLE_" prefix
+        // e.g., "ROLE_ADMIN", "ROLE_MANAGER", "ROLE_STAFF"
         jwtGrantedAuthoritiesConverter.setAuthorityPrefix("");
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);

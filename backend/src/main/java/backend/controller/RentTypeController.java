@@ -1,5 +1,6 @@
 package backend.controller;
 
+import backend.dto.request.AddRentTypeToBuildingRequest;
 import backend.dto.request.RentTypeCreationRequest;
 import backend.dto.request.RentTypeUpdateRequest;
 import backend.dto.response.ApiResponse;
