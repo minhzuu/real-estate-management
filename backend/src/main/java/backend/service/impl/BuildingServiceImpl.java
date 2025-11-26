@@ -4,6 +4,7 @@ import backend.dto.request.AssignBuildingStaffRequest;
 import backend.dto.request.BuildingCreationRequest;
 import backend.dto.request.BuildingUpdateRequest;
 import backend.dto.response.BuildingResponse;
+import backend.dto.response.PublicBuildingResponse;
 import backend.dto.response.RentAreaResponse;
 import backend.entity.Building;
 import backend.entity.District;
@@ -242,6 +243,71 @@ public class BuildingServiceImpl implements BuildingService {
             return authentication.getName();
         }
         return "system";
+    }
+
+    // Public methods for guests
+    @Override
+    public List<PublicBuildingResponse> getAllPublicBuildings() {
+        log.info("Getting all public buildings");
+        List<Building> buildings = buildingRepository.findAll();
+        return buildings.stream()
+                .map(this::toPublicBuildingResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public PublicBuildingResponse getPublicBuildingById(Long id) {
+        log.info("Getting public building with ID: {}", id);
+        Building building = buildingRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.BUILDING_NOT_EXISTS));
+        return toPublicBuildingResponse(building);
+    }
+
+    @Override
+    public List<PublicBuildingResponse> searchPublicBuildings(String keyword) {
+        log.info("Searching public buildings with keyword: {}", keyword);
+        List<Building> buildings = buildingRepository.findAllByNameContainingIgnoreCase(keyword);
+        return buildings.stream()
+                .map(this::toPublicBuildingResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PublicBuildingResponse toPublicBuildingResponse(Building building) {
+        return PublicBuildingResponse.builder()
+                .id(building.getId())
+                .name(building.getName())
+                .street(building.getStreet())
+                .ward(building.getWard())
+                .structure(building.getStructure())
+                .numberOfBasement(building.getNumberOfBasement())
+                .floorArea(building.getFloorArea())
+                .rentPrice(building.getRentPrice())
+                .rentPriceDescription(building.getRentPriceDescription())
+                .serviceFee(building.getServiceFee())
+                .type(building.getType())
+                .linkOfBuilding(building.getLinkOfBuilding())
+                .map(building.getMap())
+                .image(building.getImage())
+                .district(building.getDistrict() != null ?
+                        PublicBuildingResponse.DistrictInfo.builder()
+                                .id(building.getDistrict().getId())
+                                .name(building.getDistrict().getName())
+                                .build() : null)
+                .rentTypes(building.getRentTypes() != null ?
+                        building.getRentTypes().stream()
+                                .map(rt -> PublicBuildingResponse.RentTypeInfo.builder()
+                                        .id(rt.getId())
+                                        .name(rt.getName())
+                                        .build())
+                                .collect(Collectors.toSet()) : null)
+                .rentAreas(building.getRentAreas() != null ?
+                        building.getRentAreas().stream()
+                                .map(ra -> PublicBuildingResponse.RentAreaInfo.builder()
+                                        .id(ra.getId())
+                                        .value(ra.getValue())
+                                        .build())
+                                .collect(Collectors.toSet()) : null)
+                .build();
     }
 }
 

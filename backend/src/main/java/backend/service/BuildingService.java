@@ -4,6 +4,7 @@ import backend.dto.request.AssignBuildingStaffRequest;
 import backend.dto.request.BuildingCreationRequest;
 import backend.dto.request.BuildingUpdateRequest;
 import backend.dto.response.BuildingResponse;
+import backend.dto.response.PublicBuildingResponse;
 import backend.dto.response.RentAreaResponse;
 
 import java.util.List;
@@ -17,5 +18,10 @@ public interface BuildingService {
     List<BuildingResponse> searchBuildings(String keyword);
     List<RentAreaResponse> getBuildingRentAreas(Long id);
     BuildingResponse assignStaffToBuilding(AssignBuildingStaffRequest request);
+
+    // Public methods for guests
+    List<PublicBuildingResponse> getAllPublicBuildings();
+    PublicBuildingResponse getPublicBuildingById(Long id);
+    List<PublicBuildingResponse> searchPublicBuildings(String keyword);
 }
 

@@ -1,4 +1,4 @@
-package backend.controller;
+package backend.controller.admin;
 
 import backend.dto.request.AddRentTypeToBuildingRequest;
 import backend.dto.request.RentTypeCreationRequest;
