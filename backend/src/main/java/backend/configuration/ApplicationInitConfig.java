@@ -18,16 +18,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
+@ConditionalOnProperty(
+        prefix = "spring.datasource",
+        name = "driver-class-name",
+        havingValue = "com.mysql.cj.jdbc.Driver"
+)
 public class ApplicationInitConfig {
-    
+
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
     
     @Bean
     @ConditionalOnProperty(
-            prefix = "spring.datasource",
-            name = "driver-class-name",
-            havingValue = "com.mysql.cj.jdbc.Driver"
+            prefix = "app.init",
+            name = "create-default-admin",
+            havingValue = "true"
     )
     ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {

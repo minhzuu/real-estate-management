@@ -16,6 +16,9 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
+app:
+  init:
+    create-default-admin: false
 jwt:
   signerKey : "sqrFCjvyZ4h1rpTS67vRV2EDOsi/wE1iHvJ+4/FlXfSIdTjfApB1wLxIQpL38psO"
   valid-duration : 3600

@@ -6,13 +6,13 @@ import jakarta.validation.ConstraintViolation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 
-import java.nio.file.AccessDeniedException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiResponse<?>> handlingMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String enumKey =  e.getFieldError().getDefaultMessage();
         ErrorCode errorCode = ErrorCode.INVALID_KEY;
-        Map<String, Object> attribute = null;
+        Map<?, ?> attribute = null;
         
         log.info("Validation error - enumKey: {}", enumKey);
         
@@ -82,7 +82,7 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
     
-    private String mapAttribute(String message, Map<String, Object> attribute){
+    private String mapAttribute(String message, Map<?, ?> attribute){
         String minValue = String.valueOf(attribute.get(MIN_ATTRIBUTE)) ;
         return message.replace("{" + MIN_ATTRIBUTE + "}", minValue);
     }

@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @Override
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();

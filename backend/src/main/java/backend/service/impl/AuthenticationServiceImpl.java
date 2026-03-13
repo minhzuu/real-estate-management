@@ -170,7 +170,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private String buildScope(User user){
         StringJoiner stringJoiner = new StringJoiner(" ");
         if(user.getRole() != null){
-            stringJoiner.add("ROLE_"+user.getRole().getName());
+            String normalizedRoleName = user.getRole().getName() == null
+                    ? ""
+                    : user.getRole().getName().trim().toUpperCase();
+            if (!normalizedRoleName.isEmpty()) {
+                stringJoiner.add("ROLE_" + normalizedRoleName);
+            }
         }
         return stringJoiner.toString();
     }

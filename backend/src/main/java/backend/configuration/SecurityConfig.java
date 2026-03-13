@@ -26,7 +26,8 @@ public class SecurityConfig {
             "/users",
             "/api/auth/login",
             "/api/auth/refresh-token",
-            "/api/auth/introspect"
+            "/api/auth/introspect",
+            "/api/public/**"
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {

@@ -1,9 +1,14 @@
 package backend.controller;
 
+import backend.dto.request.ConsultRequestDto;
 import backend.dto.response.ApiResponse;
+import backend.dto.response.ConsultRequestResponse;
 import backend.dto.response.PublicBuildingResponse;
 import backend.service.BuildingService;
+import backend.service.ConsultRequestService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +20,7 @@ import java.util.List;
 public class PublicBuildingController {
 
     private final BuildingService buildingService;
+    private final ConsultRequestService consultRequestService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PublicBuildingResponse>>> getAllBuildings() {
@@ -44,6 +50,18 @@ public class PublicBuildingController {
                 ApiResponse.<List<PublicBuildingResponse>>builder()
                         .result(buildings)
                         .message("Search buildings successfully")
+                        .build());
+    }
+
+    @PostMapping("/{id}/request-consult")
+    public ResponseEntity<ApiResponse<ConsultRequestResponse>> requestConsult(
+            @PathVariable Long id,
+            @Valid @RequestBody ConsultRequestDto request) {
+        ConsultRequestResponse response = consultRequestService.createConsultRequest(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.<ConsultRequestResponse>builder()
+                        .result(response)
+                        .message("Consult request submitted successfully")
                         .build());
     }
 }

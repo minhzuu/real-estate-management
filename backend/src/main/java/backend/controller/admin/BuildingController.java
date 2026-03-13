@@ -19,12 +19,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/buildings")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('Admin')")
 public class BuildingController {
 
     private final BuildingService buildingService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<BuildingResponse>> createBuilding(
             @Valid @RequestBody BuildingCreationRequest request) {
         BuildingResponse response = buildingService.createBuilding(request);
@@ -36,6 +36,7 @@ public class BuildingController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<BuildingResponse>> updateBuilding(
             @PathVariable Long id,
             @Valid @RequestBody BuildingUpdateRequest request) {
@@ -48,6 +49,7 @@ public class BuildingController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
     public ResponseEntity<ApiResponse<List<BuildingResponse>>> getAllBuildings() {
         List<BuildingResponse> buildings = buildingService.getAllBuildings();
         return ResponseEntity.ok(
@@ -58,6 +60,7 @@ public class BuildingController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
     public ResponseEntity<ApiResponse<BuildingResponse>> getBuildingById(@PathVariable Long id) {
         BuildingResponse response = buildingService.getBuildingById(id);
         return ResponseEntity.ok(
@@ -68,6 +71,7 @@ public class BuildingController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteBuilding(@PathVariable Long id) {
         buildingService.deleteBuilding(id);
         return ResponseEntity.ok(
@@ -77,6 +81,7 @@ public class BuildingController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
     public ResponseEntity<ApiResponse<List<BuildingResponse>>> searchBuildings(
             @RequestParam String keyword) {
         List<BuildingResponse> buildings = buildingService.searchBuildings(keyword);
@@ -88,6 +93,7 @@ public class BuildingController {
     }
 
     @GetMapping("/{id}/rentareas")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
     public ResponseEntity<ApiResponse<List<RentAreaResponse>>> getBuildingRentAreas(
             @PathVariable Long id) {
         List<RentAreaResponse> rentAreas = buildingService.getBuildingRentAreas(id);
@@ -99,6 +105,7 @@ public class BuildingController {
     }
 
     @PostMapping("/{id}/staff")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_MANAGER')")
     public ResponseEntity<ApiResponse<BuildingResponse>> assignStaffToBuilding(
             @PathVariable Long id,
             @Valid @RequestBody AssignBuildingStaffRequest request) {

@@ -26,7 +26,11 @@ public enum ErrorCode {
     BUILDING_NAME_EXISTS(3002, "Building name already exists",HttpStatus.BAD_REQUEST),
     DISTRICT_NOT_EXISTS(3003, "District does not exist",HttpStatus.NOT_FOUND),
     RENT_TYPE_NOT_EXISTS(3004, "Rent type does not exist",HttpStatus.NOT_FOUND),
-    RENT_TYPE_NAME_EXISTS(3005, "Rent type name already exists",HttpStatus.BAD_REQUEST)
+    RENT_TYPE_NAME_EXISTS(3005, "Rent type name already exists",HttpStatus.BAD_REQUEST),
+    STAFF_IDS_REQUIRED(3006, "Staff IDs are required",HttpStatus.BAD_REQUEST),
+    CUSTOMER_NAME_REQUIRED(3007, "Customer name is required",HttpStatus.BAD_REQUEST),
+    CUSTOMER_PHONE_REQUIRED(3008, "Customer phone is required",HttpStatus.BAD_REQUEST),
+    CONSULT_REQUEST_NOT_EXISTS(3009, "Consult request does not exist",HttpStatus.NOT_FOUND)
     ;
     private final int code;
     private final String message;

@@ -1,7 +1,6 @@
 package backend.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,10 +14,9 @@ import java.util.Set;
 @Builder
 public class AssignBuildingStaffRequest {
 
-    @NotNull(message = "Building ID is required")
-    private Long buildingId;
+    private Long buildingId; // Set from path variable in controller
 
-    @NotEmpty(message = "Staff IDs are required")
+    @NotEmpty(message = "STAFF_IDS_REQUIRED")
     private Set<Long> staffIds;
 }
 

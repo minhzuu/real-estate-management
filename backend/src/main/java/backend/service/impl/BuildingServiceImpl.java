@@ -149,6 +149,7 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     @Override
+    @Transactional
     public List<BuildingResponse> getAllBuildings() {
         log.info("Getting all buildings");
         List<Building> buildings = buildingRepository.findAll();
@@ -158,6 +159,7 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     @Override
+    @Transactional
     public BuildingResponse getBuildingById(Long id) {
         log.info("Getting building with ID: {}", id);
         Building building = buildingRepository.findById(id)
@@ -185,6 +187,7 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     @Override
+    @Transactional
     public List<BuildingResponse> searchBuildings(String keyword) {
         log.info("Searching buildings with keyword: {}", keyword);
         List<Building> buildings = buildingRepository.findAllByNameContainingIgnoreCase(keyword);
@@ -247,6 +250,7 @@ public class BuildingServiceImpl implements BuildingService {
 
     // Public methods for guests
     @Override
+    @Transactional
     public List<PublicBuildingResponse> getAllPublicBuildings() {
         log.info("Getting all public buildings");
         List<Building> buildings = buildingRepository.findAll();
@@ -256,6 +260,7 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     @Override
+    @Transactional
     public PublicBuildingResponse getPublicBuildingById(Long id) {
         log.info("Getting public building with ID: {}", id);
         Building building = buildingRepository.findById(id)
@@ -264,6 +269,7 @@ public class BuildingServiceImpl implements BuildingService {
     }
 
     @Override
+    @Transactional
     public List<PublicBuildingResponse> searchPublicBuildings(String keyword) {
         log.info("Searching public buildings with keyword: {}", keyword);
         List<Building> buildings = buildingRepository.findAllByNameContainingIgnoreCase(keyword);
