@@ -12,6 +12,11 @@ import Customers from "./pages/Customers";
 import Users from "./pages/Users";
 import ConsultRequests from "./pages/ConsultRequests";
 import Home from "./pages/Home";
+import Properties from "./pages/Properties";
+import Services from "./pages/Services";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import BuildingDetail from "./pages/BuildingDetail";
 
 function getNormalizedRole(user) {
   const rawRole = user?.roleName || user?.role?.name || "";
@@ -69,8 +74,13 @@ function App() {
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Public landing page — no auth required */}
+          {/* Public pages — no auth required */}
           <Route path="/" element={<Home />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/property/:id" element={<BuildingDetail />} />
 
           {/* Auth */}
           <Route

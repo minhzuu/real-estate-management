@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Layout from "../components/Layout";
 import buildingService from "../services/buildingService";
+import uploadService from "../services/uploadService";
 import userService from "../services/userService";
 import { useAuth } from "../context/AuthContext";
 
@@ -69,15 +70,48 @@ function ConfirmModal({ message, onConfirm, onCancel }) {
 
 function BuildingForm({ initial, onSubmit, onCancel, loading }) {
   const [form, setForm] = useState(initial || EMPTY_FORM);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(initial?.image || "");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setForm((f) => ({ ...f, image: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = { ...form };
+
+    if (imageFile) {
+      try {
+        setUploading(true);
+        const url = await uploadService.uploadImage(imageFile, "buildings");
+        payload.image = url;
+      } catch {
+        alert("Upload ảnh thất bại. Vui lòng thử lại.");
+        setUploading(false);
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
+
     ["numberOfBasement", "floorArea", "rentPrice", "districtId"].forEach((k) => {
       if (payload[k] !== "") payload[k] = Number(payload[k]);
     });
@@ -97,6 +131,8 @@ function BuildingForm({ initial, onSubmit, onCancel, loading }) {
       )}
     </div>
   );
+
+  const isBusy = loading || uploading;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,16 +158,55 @@ function BuildingForm({ initial, onSubmit, onCancel, loading }) {
         {field("Thời gian hoàn thiện", "decorationTime")}
         {field("Phí môi giới", "brokerageFee")}
         {field("Link tòa nhà", "linkOfBuilding")}
-        {field("Ảnh (URL)", "image")}
       </div>
+
+      {/* Image Upload */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Ảnh tòa nhà</label>
+        {imagePreview ? (
+          <div className="relative inline-block">
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="w-full max-w-xs h-40 object-cover rounded-lg border border-gray-200"
+            />
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600 shadow"
+            >
+              ✕
+            </button>
+          </div>
+        ) : (
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full max-w-xs h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-8 h-8 text-gray-400 mb-2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-8m0 0l-3 3m3-3l3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.338-2.32 3.75 3.75 0 013.57 5.345A3.75 3.75 0 0118 19.5H6.75z" />
+            </svg>
+            <p className="text-sm text-gray-500">Click để chọn ảnh</p>
+            <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP (tối đa 10MB)</p>
+          </div>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
+      </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
         <textarea name="note" value={form.note} onChange={handleChange} rows={3} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none" />
       </div>
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="flex-1 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">Hủy</button>
-        <button type="submit" disabled={loading} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-60">
-          {loading ? "Đang lưu..." : "Lưu"}
+        <button type="submit" disabled={isBusy} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-60">
+          {uploading ? "Đang tải ảnh..." : loading ? "Đang lưu..." : "Lưu"}
         </button>
       </div>
     </form>
