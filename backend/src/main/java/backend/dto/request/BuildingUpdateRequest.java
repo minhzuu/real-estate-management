@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -64,6 +65,8 @@ public class BuildingUpdateRequest {
     private String map;
 
     private String image;
+
+    private List<String> images;
 
     private Long districtId;
 

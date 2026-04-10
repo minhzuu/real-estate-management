@@ -1,18 +1,10 @@
 package backend.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +20,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"rentAreas", "rentTypes", "assignedUsers", "district"})
+@ToString(exclude = {"rentAreas", "rentTypes", "assignedUsers", "district", "images"})
 @Entity
 @Table(name = "building")
 public class Building {
@@ -128,6 +120,11 @@ public class Building {
     @Builder.Default
     @ManyToMany(mappedBy = "assignedBuildings")
     private Set<User> assignedUsers = new LinkedHashSet<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<BuildingImage> images = new ArrayList<>();
 }
 
 

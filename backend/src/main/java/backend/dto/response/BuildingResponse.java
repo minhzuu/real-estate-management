@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -39,6 +40,7 @@ public class BuildingResponse {
     private String linkOfBuilding;
     private String map;
     private String image;
+    private List<String> images;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
     private String createdBy;

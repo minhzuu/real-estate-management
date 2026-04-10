@@ -56,7 +56,7 @@ export default function Home() {
   const featured = filtered.slice(0, 6);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-white text-dark-800 overflow-x-hidden">
       <PublicHeader scrolled={headerScrolled} />
 
       <HeroSection

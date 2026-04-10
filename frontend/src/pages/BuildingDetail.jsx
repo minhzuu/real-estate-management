@@ -1,27 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination, Thumbs, Keyboard } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import "swiper/css/thumbs";
 import consultService from "../services/consultService";
 import ConsultModal from "../components/ConsultModal";
 import Footer from "../components/Footer";
-import { Icons } from "../components/icons";
 
 function Skeleton({ className }) {
-  return <div className={`shimmer rounded-lg ${className}`} />;
-}
-
-function InfoRow({ icon, label, value, accent }) {
-  if (!value && value !== 0) return null;
-  return (
-    <div className="flex items-start gap-3 py-3">
-      <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${accent ? "bg-primary-50 text-primary-600" : "bg-gray-100 text-gray-500"}`}>
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</p>
-        <p className="text-sm font-semibold text-gray-900 mt-0.5">{value}</p>
-      </div>
-    </div>
-  );
+  return <div className={`shimmer rounded ${className}`} />;
 }
 
 export default function BuildingDetail() {
@@ -33,6 +23,9 @@ export default function BuildingDetail() {
   const [showConsult, setShowConsult] = useState(false);
   const [headerScrolled, setHeaderScrolled] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
     setLoading(true);
@@ -44,31 +37,41 @@ export default function BuildingDetail() {
   }, [id]);
 
   useEffect(() => {
-    const onScroll = () => setHeaderScrolled(window.scrollY > 300);
+    const onScroll = () => setHeaderScrolled(window.scrollY > 400);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (lightboxOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [lightboxOpen]);
 
   const address = building
     ? [building.street, building.ward, building.district?.name].filter(Boolean).join(", ")
     : "";
 
-  const rentAreasText = building?.rentAreas?.length
-    ? [...building.rentAreas].map((ra) => `${ra.value} m²`).join(", ")
-    : null;
+  const allImages = building
+    ? (building.images?.length > 0 ? building.images : building.image ? [building.image] : [])
+    : [];
+  const hasMultiple = allImages.length > 1;
 
+  /* ─── Loading ─── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="h-[55vh] shimmer" />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 -mt-24 relative z-10">
-          <div className="bg-white rounded-3xl shadow-xl p-8">
-            <Skeleton className="h-8 w-2/3 mb-4" />
-            <Skeleton className="h-5 w-1/3 mb-6" />
-            <div className="grid grid-cols-3 gap-4">
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
-              <Skeleton className="h-24" />
+      <div className="min-h-screen bg-white">
+        <div className="h-[60vh] bg-dark-100 shimmer" />
+        <div className="mx-auto max-w-6xl px-6 -mt-20 relative z-10">
+          <div className="bg-white rounded-xl shadow-lg p-10">
+            <Skeleton className="h-6 w-1/4 mb-4" />
+            <Skeleton className="h-10 w-2/3 mb-4" />
+            <Skeleton className="h-5 w-1/3 mb-8" />
+            <div className="grid grid-cols-5 gap-6">
+              {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-20" />)}
             </div>
           </div>
         </div>
@@ -76,317 +79,312 @@ export default function BuildingDetail() {
     );
   }
 
+  /* ─── Error ─── */
   if (error || !building) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-6xl mb-6">🏚️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{error || "Không tìm thấy"}</h2>
-          <p className="text-gray-500 mb-6">Tòa nhà này không tồn tại hoặc đã bị xóa.</p>
-          <Link to="/properties" className="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-xl font-semibold hover:bg-primary-600 transition-colors">
-            {Icons.arrow} Quay lại danh sách
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-dark-50 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="w-10 h-10 text-dark-300">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <h2 className="font-heading text-2xl text-dark-800 mb-2">{error || "Không tìm thấy"}</h2>
+          <p className="text-dark-400 mb-8">Tòa nhà này không tồn tại hoặc đã bị xóa.</p>
+          <Link to="/properties" className="inline-flex items-center gap-2 px-6 py-3 bg-dark-800 text-white rounded-lg font-medium text-sm hover:bg-dark-700 transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại danh sách
           </Link>
         </div>
       </div>
     );
   }
 
+  const v = (val) => val ?? "—";
+
+  const buildingInfo = [
+    { label: "Diện tích sàn", value: building.floorArea ? `${building.floorArea.toLocaleString()} m²` : "—" },
+    { label: "Kết cấu", value: v(building.structure) },
+    { label: "Số tầng hầm", value: building.numberOfBasement != null ? `${building.numberOfBasement} tầng` : "—" },
+    { label: "Loại hình", value: v(building.type) },
+    { label: "Quận", value: v(building.district?.name) },
+    { label: "Phường/Xã", value: v(building.ward) },
+    { label: "Đường", value: v(building.street) },
+  ];
+
+  const feeInfo = [
+    { label: "Giá thuê", value: building.rentPrice ? `${building.rentPrice.toLocaleString()} USD/m²` : "—", accent: true },
+    { label: "Phí dịch vụ", value: v(building.serviceFee) },
+    { label: "Phí điện", value: v(building.electricityFee) },
+    { label: "Phí nước", value: v(building.waterFee) },
+    { label: "Phí ô tô", value: v(building.carFee) },
+    { label: "Phí xe máy", value: v(building.motorbikeFee) },
+    { label: "Phí ngoài giờ", value: v(building.overtimeFee) },
+    { label: "Phí môi giới", value: v(building.brokerageFee) },
+  ];
+
+  const termInfo = [
+    { label: "Đặt cọc", value: v(building.deposit) },
+    { label: "Hình thức thanh toán", value: v(building.payment) },
+    { label: "Thời gian thuê", value: v(building.rentTime) },
+    { label: "Thời gian hoàn thiện", value: v(building.decorationTime) },
+  ];
+
+  const quickStats = [
+    { key: "area", label: "Diện tích", value: building.floorArea ? `${building.floorArea.toLocaleString()} m²` : "—" },
+    { key: "structure", label: "Kết cấu", value: building.structure || "—" },
+    { key: "basement", label: "Tầng hầm", value: building.numberOfBasement != null ? building.numberOfBasement : "—" },
+    { key: "type", label: "Loại hình", value: building.type || "—" },
+    { key: "price", label: "Giá thuê", value: building.rentPrice ? `${building.rentPrice.toLocaleString()} USD` : "Liên hệ" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sticky Header */}
-      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${headerScrolled ? "bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-100" : "bg-transparent"}`}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-white">
+      {/* ── Sticky Header ── */}
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${headerScrolled ? "bg-white/95 backdrop-blur-xl shadow-[0_1px_20px_rgba(0,0,0,0.06)]" : "bg-transparent"}`}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className={`p-2 rounded-xl transition-all ${headerScrolled ? "hover:bg-gray-100 text-gray-700" : "hover:bg-white/20 text-white"}`}>
+            <button onClick={() => navigate(-1)} className={`p-2 rounded-lg transition-all ${headerScrolled ? "hover:bg-dark-50 text-dark-700" : "hover:bg-white/20 text-white"}`}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
             </button>
             {headerScrolled && (
               <div className="animate-fade-in">
-                <p className="text-sm font-bold text-gray-900 line-clamp-1">{building.name}</p>
-                {building.rentPrice && (
-                  <p className="text-xs font-semibold text-primary-600">{building.rentPrice.toLocaleString()} USD/m²</p>
-                )}
+                <p className="text-sm font-semibold text-dark-800 line-clamp-1 font-body">{building.name}</p>
+                {building.rentPrice && <p className="text-xs text-primary-500 font-medium">{building.rentPrice.toLocaleString()} USD/m²</p>}
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {headerScrolled && (
-              <button onClick={() => setShowConsult(true)} className="px-5 py-2 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-600 transition-colors animate-fade-in">
-                Liên hệ
+              <button onClick={() => setShowConsult(true)} className="px-5 py-2 bg-dark-800 text-white text-sm font-medium rounded-lg hover:bg-dark-700 transition-colors animate-fade-in">
+                Yêu cầu tư vấn
               </button>
             )}
-            <Link to="/" className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all ${headerScrolled ? "bg-gray-100 hover:bg-gray-200" : "bg-white/15 hover:bg-white/25"}`}>
-              {Icons.home}
+            <Link to="/" className={`p-2 rounded-lg transition-all ${headerScrolled ? "hover:bg-dark-50 text-dark-600" : "hover:bg-white/20 text-white"}`}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero Image */}
-      <section className="relative h-[55vh] min-h-[400px] overflow-hidden bg-gradient-to-br from-gray-900 via-primary-900 to-secondary-900">
-        {building.image && (
-          <img
-            src={building.image}
-            alt={building.name}
-            onLoad={() => setImageLoaded(true)}
-            className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ${imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105"}`}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
+      {/* ── Hero Image Gallery ── */}
+      <section className="relative h-[60vh] min-h-[450px] bg-dark-900 overflow-hidden">
+        {allImages.length > 0 ? (
+          <>
+            <Swiper
+              modules={[Navigation, Pagination, Thumbs, Keyboard]}
+              navigation={hasMultiple}
+              pagination={hasMultiple ? { clickable: true } : false}
+              keyboard={{ enabled: true }}
+              thumbs={hasMultiple && thumbsSwiper ? { swiper: thumbsSwiper } : undefined}
+              loop={hasMultiple}
+              className="h-full w-full building-hero-swiper"
+            >
+              {allImages.map((url, idx) => (
+                <SwiperSlide key={idx}>
+                  <img
+                    src={url}
+                    alt={`${building.name} - ${idx + 1}`}
+                    onLoad={idx === 0 ? () => setImageLoaded(true) : undefined}
+                    onClick={() => { setLightboxIndex(idx); setLightboxOpen(true); }}
+                    className={`w-full h-full object-cover cursor-zoom-in transition-all duration-1000 ${idx === 0 ? (imageLoaded ? "opacity-100 scale-100" : "opacity-0 scale-105") : ""}`}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
 
-        {!building.image && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <div className="w-24 h-24 rounded-3xl bg-white/10 flex items-center justify-center mb-4">
-              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={1} className="w-14 h-14 opacity-30">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <p className="text-white/30 text-sm font-medium">Chưa có ảnh tòa nhà</p>
-          </div>
-        )}
-
-        {/* Breadcrumb on hero */}
-        <div className="absolute top-20 left-0 right-0 z-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <nav className="flex items-center gap-2 text-sm text-white/70">
-              <Link to="/" className="hover:text-white transition-colors">Trang chủ</Link>
-              <span>/</span>
-              <Link to="/properties" className="hover:text-white transition-colors">Bất động sản</Link>
-              <span>/</span>
-              <span className="text-white font-medium line-clamp-1">{building.name}</span>
-            </nav>
-          </div>
-        </div>
-
-        {/* Building name overlay */}
-        <div className="absolute bottom-0 left-0 right-0 z-10">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-28">
-            {building.type && (
-              <span className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-white/15 backdrop-blur-md border border-white/20 rounded-full text-xs font-bold text-white mb-4">
-                {building.type}
-              </span>
-            )}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-              {building.name}
-            </h1>
-            {address && (
-              <div className="flex items-center gap-2 mt-3 text-white/80">
-                <span className="text-white/60">{Icons.location}</span>
-                <span className="text-base font-medium">{address}</span>
+            {hasMultiple && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 max-w-sm w-full px-4">
+                <Swiper
+                  modules={[Thumbs]}
+                  onSwiper={setThumbsSwiper}
+                  slidesPerView={Math.min(allImages.length, 5)}
+                  spaceBetween={6}
+                  watchSlidesProgress
+                  className="building-thumbs-swiper"
+                >
+                  {allImages.map((url, idx) => (
+                    <SwiperSlide key={idx}>
+                      <div className="h-12 rounded-md overflow-hidden border-2 border-white/30 hover:border-white transition-all cursor-pointer">
+                        <img src={url} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
               </div>
             )}
+
+            {hasMultiple && (
+              <button
+                onClick={() => { setLightboxIndex(0); setLightboxOpen(true); }}
+                className="absolute top-20 right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-black/40 backdrop-blur-sm rounded-md text-white text-xs font-medium hover:bg-black/60 transition-colors"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {allImages.length} ảnh
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-dark-800 to-dark-900">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={0.5} className="w-20 h-20 text-dark-600 mb-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <p className="text-dark-500 text-sm">Chưa có ảnh tòa nhà</p>
           </div>
-        </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
       </section>
 
-      {/* Floating Stats Card */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 -mt-16 relative z-20 mb-8">
-        <div className="bg-white rounded-2xl shadow-xl shadow-black/[0.06] border border-gray-100 p-6 sm:p-8">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-            <div className="text-center sm:text-left">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Giá thuê</p>
-              <p className="text-2xl sm:text-3xl font-black text-primary-600">
-                {building.rentPrice ? `${building.rentPrice.toLocaleString()}` : "Liên hệ"}
-              </p>
-              {building.rentPrice && <p className="text-xs text-gray-500 font-medium mt-0.5">USD/m²/tháng</p>}
-            </div>
-            <div className="text-center sm:text-left">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Diện tích sàn</p>
-              <p className="text-2xl sm:text-3xl font-black text-gray-900">
-                {building.floorArea ? `${building.floorArea.toLocaleString()}` : "—"}
-              </p>
-              {building.floorArea && <p className="text-xs text-gray-500 font-medium mt-0.5">m²</p>}
-            </div>
-            <div className="text-center sm:text-left">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Kết cấu</p>
-              <p className="text-lg font-bold text-gray-900 mt-1">{building.structure || "—"}</p>
-            </div>
-            <div className="text-center sm:text-left">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">Tầng hầm</p>
-              <p className="text-2xl sm:text-3xl font-black text-gray-900">{building.numberOfBasement ?? "—"}</p>
-              {building.numberOfBasement != null && <p className="text-xs text-gray-500 font-medium mt-0.5">tầng</p>}
-            </div>
-          </div>
+      {/* ── Title & Quick Stats ── */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 -mt-28 relative z-20">
+        <div className="bg-white rounded-xl shadow-xl shadow-black/[0.08] p-8 sm:p-10">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-xs text-dark-400 mb-5 font-body">
+            <Link to="/" className="hover:text-primary-500 transition-colors">Trang chủ</Link>
+            <span className="text-dark-200">/</span>
+            <Link to="/properties" className="hover:text-primary-500 transition-colors">Bất động sản</Link>
+            <span className="text-dark-200">/</span>
+            <span className="text-dark-600">{building.name}</span>
+          </nav>
 
-          {/* Quick CTA */}
-          <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={() => setShowConsult(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-500 text-white rounded-xl font-bold text-sm hover:shadow-xl hover:shadow-primary-200 hover:-translate-y-0.5 transition-all duration-300"
-            >
-              {Icons.phone} Yêu cầu tư vấn miễn phí
-            </button>
-            {building.linkOfBuilding && (
-              <a
-                href={building.linkOfBuilding}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 border border-gray-200 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-50 transition-colors"
-              >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                Xem trên web
-              </a>
-            )}
+          {/* Type badge */}
+          {building.type && (
+            <span className="inline-block px-3 py-1 bg-primary-50 text-primary-600 text-xs font-semibold tracking-wide uppercase rounded mb-4 font-body">
+              {building.type}
+            </span>
+          )}
+
+          {/* Title */}
+          <h1 className="font-heading text-3xl sm:text-4xl lg:text-[2.75rem] text-dark-900 leading-tight mb-3">
+            {building.name}
+          </h1>
+
+          {/* Address */}
+          {address && (
+            <p className="flex items-center gap-2 text-dark-400 text-sm font-body mb-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4 flex-shrink-0">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {address}
+            </p>
+          )}
+
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-0 sm:divide-x divide-dark-100">
+            {quickStats.map((stat, i) => (
+              <div key={i} className={`${i > 0 ? "sm:pl-6" : ""} ${i < quickStats.length - 1 ? "sm:pr-6" : ""}`}>
+                <p className="text-[11px] text-dark-300 uppercase tracking-wider font-semibold mb-1.5 font-body">{stat.label}</p>
+                <p className={`text-lg font-bold font-body ${stat.key === "price" ? "text-primary-500" : "text-dark-800"}`}>
+                  {stat.value}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-20">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Left Column — Details */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Description */}
+      {/* ── Main Content ── */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid lg:grid-cols-3 gap-10">
+          {/* ── Left Column ── */}
+          <div className="lg:col-span-2 space-y-10">
+
+            {/* Summary / Description */}
             {building.rentPriceDescription && (
-              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </span>
-                  Mô tả giá thuê
-                </h2>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">{building.rentPriceDescription}</p>
+              <section>
+                <h2 className="font-heading text-2xl text-dark-900 mb-1">Tổng quan</h2>
+                <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+                <p className="text-dark-500 leading-relaxed whitespace-pre-line font-body text-[15px]">
+                  {building.rentPriceDescription}
+                </p>
               </section>
             )}
 
-            {/* Fee Details */}
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                  {Icons.price}
-                </span>
-                Chi phí & Điều khoản
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-x-8 divide-y sm:divide-y-0">
-                <div className="divide-y divide-gray-100">
-                  <InfoRow
-                    icon={Icons.price}
-                    label="Giá thuê"
-                    value={building.rentPrice ? `${building.rentPrice.toLocaleString()} USD/m²` : null}
-                    accent
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" /></svg>}
-                    label="Phí dịch vụ"
-                    value={building.serviceFee}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>}
-                    label="Phí điện"
-                    value={building.electricityFee}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>}
-                    label="Phí nước"
-                    value={building.waterFee}
-                  />
-                </div>
-                <div className="divide-y divide-gray-100">
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.079-.481 1.024-1.099-.045-.51-.12-1.014-.207-1.512l-1.168-5.84A2.25 2.25 0 0016.637 8.1H3.75" /></svg>}
-                    label="Phí ô tô"
-                    value={building.carFee}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                    label="Phí ngoài giờ"
-                    value={building.overtimeFee}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                    label="Đặt cọc"
-                    value={building.deposit}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>}
-                    label="Thanh toán"
-                    value={building.payment}
-                  />
-                </div>
+            {/* Building Specification */}
+            <section>
+              <h2 className="font-heading text-2xl text-dark-900 mb-1">Thông tin tòa nhà</h2>
+              <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+              <div className="grid sm:grid-cols-2 gap-x-8">
+                {buildingInfo.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-3.5 border-b border-dark-50">
+                    <span className="text-dark-400 text-sm font-body">{item.label}</span>
+                    <span className={`text-sm font-semibold font-body ${item.value === "—" ? "text-dark-200" : "text-dark-800"}`}>{item.value}</span>
+                  </div>
+                ))}
               </div>
             </section>
 
-            {/* Building Info */}
-            <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-              <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                  {Icons.buildingSmall}
-                </span>
-                Thông tin tòa nhà
-              </h2>
-              <div className="grid sm:grid-cols-2 gap-x-8 divide-y sm:divide-y-0">
-                <div className="divide-y divide-gray-100">
-                  <InfoRow icon={Icons.buildingSmall} label="Kết cấu" value={building.structure} />
-                  <InfoRow icon={Icons.area} label="Diện tích sàn" value={building.floorArea ? `${building.floorArea.toLocaleString()} m²` : null} accent />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4h18M3 4v16h18V4M3 8h18M7 4v16" /></svg>}
-                    label="Số tầng hầm"
-                    value={building.numberOfBasement}
-                  />
-                </div>
-                <div className="divide-y divide-gray-100">
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                    label="Thời gian thuê"
-                    value={building.rentTime}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>}
-                    label="Thời gian hoàn thiện"
-                    value={building.decorationTime}
-                  />
-                  <InfoRow
-                    icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>}
-                    label="Phí môi giới"
-                    value={building.brokerageFee}
-                  />
-                </div>
+            {/* Fee & Cost Specification */}
+            <section>
+              <h2 className="font-heading text-2xl text-dark-900 mb-1">Chi phí & Phí dịch vụ</h2>
+              <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+              <div className="grid sm:grid-cols-2 gap-x-8">
+                {feeInfo.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-3.5 border-b border-dark-50">
+                    <span className="text-dark-400 text-sm font-body">{item.label}</span>
+                    <span className={`text-sm font-semibold font-body ${item.accent && item.value !== "—" ? "text-primary-500" : item.value === "—" ? "text-dark-200" : "text-dark-800"}`}>
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Rental Terms */}
+            <section>
+              <h2 className="font-heading text-2xl text-dark-900 mb-1">Điều khoản thuê</h2>
+              <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+              <div className="grid sm:grid-cols-2 gap-x-8">
+                {termInfo.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between py-3.5 border-b border-dark-50">
+                    <span className="text-dark-400 text-sm font-body">{item.label}</span>
+                    <span className={`text-sm font-semibold font-body ${item.value === "—" ? "text-dark-200" : "text-dark-800"}`}>{item.value}</span>
+                  </div>
+                ))}
               </div>
             </section>
 
             {/* Rent Areas */}
-            {rentAreasText && (
-              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center text-violet-600">
-                    {Icons.area}
-                  </span>
-                  Diện tích cho thuê
-                </h2>
+            {building.rentAreas && building.rentAreas.length > 0 && (
+              <section>
+                <h2 className="font-heading text-2xl text-dark-900 mb-1">Diện tích cho thuê</h2>
+                <div className="w-12 h-0.5 bg-primary-400 mb-6" />
                 <div className="flex flex-wrap gap-3">
                   {[...building.rentAreas].map((ra) => (
-                    <div key={ra.id} className="px-5 py-3 bg-gradient-to-br from-violet-50 to-primary-50 border border-violet-100 rounded-xl text-center">
-                      <p className="text-xl font-black text-violet-700">{ra.value}</p>
-                      <p className="text-xs font-medium text-violet-500 mt-0.5">m²</p>
+                    <div key={ra.id} className="px-5 py-3 border border-dark-100 rounded-lg text-center hover:border-primary-300 hover:bg-primary-50/50 transition-colors">
+                      <span className="text-lg font-bold text-dark-800 font-body">{ra.value}</span>
+                      <span className="text-dark-400 text-sm ml-1">m²</span>
                     </div>
                   ))}
                 </div>
               </section>
             )}
 
-            {/* Rent Types */}
+            {/* Rent Types / Features */}
             {building.rentTypes && building.rentTypes.length > 0 && (
-              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z" />
-                    </svg>
-                  </span>
-                  Loại hình cho thuê
-                </h2>
-                <div className="flex flex-wrap gap-2">
+              <section>
+                <h2 className="font-heading text-2xl text-dark-900 mb-1">Loại hình cho thuê</h2>
+                <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {[...building.rentTypes].map((rt) => (
-                    <span key={rt.id} className="px-4 py-2 bg-amber-50 text-amber-800 rounded-xl text-sm font-semibold border border-amber-100">
-                      {rt.name}
-                    </span>
+                    <div key={rt.id} className="flex items-center gap-3 py-2">
+                      <div className="w-5 h-5 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} className="w-3 h-3 text-primary-600">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-dark-600 text-sm font-medium font-body">{rt.name}</span>
+                    </div>
                   ))}
                 </div>
               </section>
@@ -394,110 +392,140 @@ export default function BuildingDetail() {
 
             {/* Note */}
             {building.note && (
-              <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+              <section>
+                <h2 className="font-heading text-2xl text-dark-900 mb-1">Ghi chú</h2>
+                <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+                <div className="bg-dark-50/50 rounded-lg p-5 border-l-4 border-primary-400">
+                  <p className="text-dark-500 leading-relaxed whitespace-pre-line font-body text-[15px]">
+                    {building.note}
+                  </p>
+                </div>
+              </section>
+            )}
+
+            {/* Location */}
+            {(building.map || address) && (
+              <section>
+                <h2 className="font-heading text-2xl text-dark-900 mb-1">Vị trí</h2>
+                <div className="w-12 h-0.5 bg-primary-400 mb-6" />
+                {address && (
+                  <div className="flex items-start gap-3 mb-5">
+                    <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-5 h-5 text-primary-500">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-dark-800 text-sm font-semibold font-body mb-0.5">Địa chỉ</p>
+                      <p className="text-dark-500 text-sm font-body">{address}</p>
+                    </div>
+                  </div>
+                )}
+                {building.map && (
+                  <a
+                    href={building.map}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 border border-dark-200 text-dark-700 rounded-lg text-sm font-medium hover:bg-dark-50 transition-colors font-body"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                  </span>
-                  Ghi chú
-                </h2>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">{building.note}</p>
+                    Xem trên Google Maps
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
               </section>
             )}
           </div>
 
-          {/* Right Column — Sticky Sidebar */}
+          {/* ── Right Column — Sidebar ── */}
           <div className="lg:col-span-1">
             <div className="sticky top-20 space-y-6">
-              {/* Contact Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 p-6 text-white text-center">
-                  <div className="w-16 h-16 mx-auto bg-white/20 rounded-2xl flex items-center justify-center mb-3">
-                    {Icons.phone}
-                  </div>
-                  <h3 className="font-bold text-lg">Quan tâm tòa nhà này?</h3>
-                  <p className="text-white/80 text-sm mt-1">Liên hệ ngay để nhận tư vấn miễn phí</p>
+
+              {/* CTA Card */}
+              <div className="bg-dark-900 rounded-xl p-7 text-center">
+                <div className="w-14 h-14 mx-auto rounded-full bg-primary-400/20 flex items-center justify-center mb-4">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="w-6 h-6 text-primary-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                  </svg>
                 </div>
-                <div className="p-6">
-                  <button
-                    onClick={() => setShowConsult(true)}
-                    className="w-full py-3.5 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-xl font-bold text-sm hover:shadow-xl hover:shadow-primary-200 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    {Icons.phone} Gửi yêu cầu tư vấn
-                  </button>
-                  <div className="mt-4 space-y-3">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span>Phản hồi trong 30 phút</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span>Tư vấn miễn phí 100%</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 flex-shrink-0">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                      <span>Hỗ trợ xem mặt bằng trực tiếp</span>
-                    </div>
-                  </div>
-                </div>
+                <h3 className="font-heading text-xl text-white mb-2">Yêu cầu tham quan</h3>
+                <p className="text-dark-300 text-sm mb-6 font-body">Liên hệ ngay để nhận tư vấn và đặt lịch xem mặt bằng miễn phí</p>
+                <button
+                  onClick={() => setShowConsult(true)}
+                  className="w-full py-3.5 bg-primary-400 text-dark-900 rounded-lg font-bold text-sm hover:bg-primary-300 transition-colors font-body"
+                >
+                  Gửi yêu cầu tư vấn
+                </button>
+                <a href="tel:+84901234567" className="flex items-center justify-center gap-2 mt-4 text-primary-400 text-sm font-medium hover:text-primary-300 transition-colors font-body">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                  </svg>
+                  +84 90 123 4567
+                </a>
               </div>
 
-              {/* Quick Info Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <h3 className="font-bold text-gray-900 mb-4 text-sm">Thông tin nhanh</h3>
-                <div className="space-y-3">
+              {/* Property Info Card */}
+              <div className="border border-dark-100 rounded-xl p-6">
+                <h3 className="font-heading text-lg text-dark-900 mb-5">Thông tin nhanh</h3>
+                <div className="space-y-0">
                   {[
+                    { label: "Mã tòa nhà", value: `#${building.id}` },
                     { label: "Loại hình", value: building.type },
                     { label: "Quận", value: building.district?.name },
                     { label: "Phường/Xã", value: building.ward },
                     { label: "Đường", value: building.street },
-                    { label: "Diện tích", value: building.floorArea ? `${building.floorArea} m²` : null },
+                    { label: "Diện tích", value: building.floorArea ? `${building.floorArea.toLocaleString()} m²` : null },
                     { label: "Giá thuê", value: building.rentPrice ? `${building.rentPrice.toLocaleString()} USD/m²` : null },
+                    { label: "Kết cấu", value: building.structure },
                   ]
                     .filter((item) => item.value)
-                    .map((item) => (
-                      <div key={item.label} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">{item.label}</span>
-                        <span className="font-semibold text-gray-900">{item.value}</span>
+                    .map((item, i) => (
+                      <div key={item.label} className={`flex items-center justify-between py-3 ${i > 0 ? "border-t border-dark-50" : ""}`}>
+                        <span className="text-dark-400 text-sm font-body">{item.label}</span>
+                        <span className="text-dark-800 text-sm font-semibold font-body">{item.value}</span>
                       </div>
                     ))}
                 </div>
               </div>
 
-              {/* Map Link */}
-              {building.map && (
+              {/* Quick Contact Benefits */}
+              <div className="border border-dark-100 rounded-xl p-6">
+                <div className="space-y-4">
+                  {[
+                    { text: "Phản hồi trong 30 phút", icon: "clock" },
+                    { text: "Tư vấn miễn phí 100%", icon: "check" },
+                    { text: "Hỗ trợ xem mặt bằng trực tiếp", icon: "eye" },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-4 h-4 text-primary-500">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <span className="text-dark-600 text-sm font-body">{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* External Link */}
+              {building.linkOfBuilding && (
                 <a
-                  href={building.map}
+                  href={building.linkOfBuilding}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:border-primary-200 hover:shadow-md transition-all group"
+                  className="flex items-center justify-center gap-2 py-3 border border-dark-200 rounded-xl text-dark-600 text-sm font-medium hover:bg-dark-50 transition-colors font-body"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
-                      {Icons.location}
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900 text-sm">Xem trên bản đồ</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Mở Google Maps</p>
-                    </div>
-                    <span className="ml-auto text-gray-400 group-hover:text-primary-500 group-hover:translate-x-1 transition-all">
-                      {Icons.arrow}
-                    </span>
-                  </div>
+                  Xem trên website gốc
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-3.5 h-3.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
                 </a>
               )}
             </div>
@@ -507,6 +535,39 @@ export default function BuildingDetail() {
 
       <Footer />
 
+      {/* ── Lightbox ── */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center" onClick={() => setLightboxOpen(false)}>
+          <button onClick={() => setLightboxOpen(false)} className="absolute top-5 right-5 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 text-white/50 text-sm font-body">
+            {lightboxIndex + 1} / {allImages.length}
+          </div>
+          <div className="w-full max-w-5xl px-4" onClick={(e) => e.stopPropagation()}>
+            <Swiper
+              modules={[Navigation, Keyboard]}
+              navigation
+              keyboard={{ enabled: true }}
+              initialSlide={lightboxIndex}
+              onSlideChange={(s) => setLightboxIndex(s.activeIndex)}
+              className="building-lightbox-swiper"
+            >
+              {allImages.map((url, idx) => (
+                <SwiperSlide key={idx}>
+                  <div className="flex items-center justify-center h-[80vh]">
+                    <img src={url} alt={`${building.name} - ${idx + 1}`} className="max-w-full max-h-full object-contain" />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </div>
+      )}
+
+      {/* ── Consult Modal ── */}
       {showConsult && (
         <ConsultModal building={building} onClose={() => setShowConsult(false)} />
       )}

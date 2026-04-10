@@ -7,6 +7,7 @@ import backend.dto.response.BuildingResponse;
 import backend.dto.response.PublicBuildingResponse;
 import backend.dto.response.RentAreaResponse;
 import backend.entity.Building;
+import backend.entity.BuildingImage;
 import backend.entity.District;
 import backend.entity.RentArea;
 import backend.entity.RentType;
@@ -14,6 +15,7 @@ import backend.entity.User;
 import backend.exception.AppException;
 import backend.exception.ErrorCode;
 import backend.mapper.BuildingMapper;
+import backend.repository.BuildingImageRepository;
 import backend.repository.BuildingRepository;
 import backend.repository.DistrictRepository;
 import backend.repository.RentAreaRepository;
@@ -27,10 +29,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +42,7 @@ import java.util.stream.Collectors;
 public class BuildingServiceImpl implements BuildingService {
 
     private final BuildingRepository buildingRepository;
+    private final BuildingImageRepository buildingImageRepository;
     private final BuildingMapper buildingMapper;
     private final DistrictRepository districtRepository;
     private final RentTypeRepository rentTypeRepository;
@@ -85,6 +90,12 @@ public class BuildingServiceImpl implements BuildingService {
                     .collect(Collectors.toSet());
             rentAreaRepository.saveAll(rentAreas);
             savedBuilding.setRentAreas(new HashSet<>(rentAreas));
+        }
+
+        // Handle multiple images if provided
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            List<BuildingImage> buildingImages = saveBuildingImages(savedBuilding, request.getImages());
+            savedBuilding.getImages().addAll(buildingImages);
         }
 
         log.info("Building created successfully with ID: {}", savedBuilding.getId());
@@ -143,6 +154,16 @@ public class BuildingServiceImpl implements BuildingService {
             building.setRentAreas(new HashSet<>(newRentAreas));
         }
 
+        // Update multiple images if provided
+        if (request.getImages() != null) {
+            building.getImages().clear();
+            buildingRepository.flush();
+            if (!request.getImages().isEmpty()) {
+                List<BuildingImage> newImages = saveBuildingImages(building, request.getImages());
+                building.getImages().addAll(newImages);
+            }
+        }
+
         Building updatedBuilding = buildingRepository.save(building);
         log.info("Building updated successfully with ID: {}", updatedBuilding.getId());
         return buildingMapper.toBuildingResponse(updatedBuilding);
@@ -175,7 +196,8 @@ public class BuildingServiceImpl implements BuildingService {
         Building building = buildingRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.BUILDING_NOT_EXISTS));
 
-        // Delete rent areas first
+        // Delete images and rent areas first
+        buildingImageRepository.deleteAllByBuildingId(id);
         rentAreaRepository.deleteAll(building.getRentAreas());
 
         // Clear relationships
@@ -290,10 +312,25 @@ public class BuildingServiceImpl implements BuildingService {
                 .rentPrice(building.getRentPrice())
                 .rentPriceDescription(building.getRentPriceDescription())
                 .serviceFee(building.getServiceFee())
+                .carFee(building.getCarFee())
+                .motorbikeFee(building.getMotorbikeFee())
+                .overtimeFee(building.getOvertimeFee())
+                .waterFee(building.getWaterFee())
+                .electricityFee(building.getElectricityFee())
+                .deposit(building.getDeposit())
+                .payment(building.getPayment())
+                .rentTime(building.getRentTime())
+                .decorationTime(building.getDecorationTime())
+                .brokerageFee(building.getBrokerageFee())
                 .type(building.getType())
+                .note(building.getNote())
                 .linkOfBuilding(building.getLinkOfBuilding())
                 .map(building.getMap())
                 .image(building.getImage())
+                .images(building.getImages() != null ?
+                        building.getImages().stream()
+                                .map(BuildingImage::getUrl)
+                                .collect(Collectors.toList()) : List.of())
                 .district(building.getDistrict() != null ?
                         PublicBuildingResponse.DistrictInfo.builder()
                                 .id(building.getDistrict().getId())
@@ -314,6 +351,17 @@ public class BuildingServiceImpl implements BuildingService {
                                         .build())
                                 .collect(Collectors.toSet()) : null)
                 .build();
+    }
+
+    private List<BuildingImage> saveBuildingImages(Building building, List<String> imageUrls) {
+        List<BuildingImage> buildingImages = IntStream.range(0, imageUrls.size())
+                .mapToObj(i -> BuildingImage.builder()
+                        .url(imageUrls.get(i))
+                        .sortOrder(i)
+                        .building(building)
+                        .build())
+                .collect(Collectors.toList());
+        return new ArrayList<>(buildingImageRepository.saveAll(buildingImages));
     }
 }
 

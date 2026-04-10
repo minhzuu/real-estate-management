@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,6 +37,25 @@ public class FileUploadController {
         return ResponseEntity.ok(
                 ApiResponse.<Map<String, String>>builder()
                         .result(Map.of("url", url))
+                        .message("Upload successful")
+                        .build());
+    }
+
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<List<String>>> uploadMultipleImages(
+            @RequestParam("files") List<MultipartFile> files,
+            @RequestParam(value = "folder", defaultValue = "buildings") String folder) throws IOException {
+
+        List<String> urls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (!file.isEmpty()) {
+                urls.add(cloudinaryService.uploadFile(file, folder));
+            }
+        }
+
+        return ResponseEntity.ok(
+                ApiResponse.<List<String>>builder()
+                        .result(urls)
                         .message("Upload successful")
                         .build());
     }

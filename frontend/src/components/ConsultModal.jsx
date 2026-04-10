@@ -23,19 +23,19 @@ export default function ConsultModal({ building, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
-        <div className="relative bg-gradient-to-br from-primary-500 via-primary-600 to-secondary-500 p-6 text-white">
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all hover:rotate-90 duration-300">
+    <div className="fixed inset-0 bg-dark-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white shadow-2xl w-full max-w-md overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
+        <div className="relative bg-dark-800 p-6 text-white">
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 hover:bg-white/10 transition-all duration-300">
             {Icons.close}
           </button>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center animate-float">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 border border-primary-400/30 flex items-center justify-center text-primary-400">
               {Icons.building}
             </div>
             <div>
-              <p className="text-white/80 text-xs font-medium">Yêu cầu tư vấn tại</p>
-              <h3 className="font-bold text-lg leading-tight">{building.name}</h3>
+              <p className="text-white/60 text-xs font-medium font-body">Yêu cầu tư vấn tại</p>
+              <h3 className="font-semibold text-lg leading-tight font-heading">{building.name}</h3>
             </div>
           </div>
         </div>
@@ -45,9 +45,9 @@ export default function ConsultModal({ building, onClose }) {
               <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5 animate-scale-in">
                 {Icons.check}
               </div>
-              <h4 className="text-xl font-bold text-gray-800 mb-2">Gửi thành công!</h4>
-              <p className="text-gray-500 text-sm mb-6">Chúng tôi sẽ liên hệ với bạn sớm nhất.</p>
-              <button onClick={onClose} className="px-8 py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-2xl font-semibold hover:shadow-lg transition-all">
+              <h4 className="text-xl font-semibold text-dark-800 mb-2 font-heading">Gửi thành công!</h4>
+              <p className="text-dark-400 text-sm mb-6 font-body">Chúng tôi sẽ liên hệ với bạn sớm nhất.</p>
+              <button onClick={onClose} className="px-8 py-3 bg-dark-800 text-white font-semibold hover:bg-dark-700 transition-all font-body">
                 Đóng
               </button>
             </div>
@@ -59,9 +59,9 @@ export default function ConsultModal({ building, onClose }) {
                 { label: "Email", key: "customerEmail", ph: "email@example.com", type: "email", opt: true },
               ].map((f) => (
                 <div key={f.key}>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-dark-700 mb-1.5 font-body">
                     {f.label} {f.req && <span className="text-red-400">*</span>}
-                    {f.opt && <span className="text-gray-400 font-normal text-xs">(tùy chọn)</span>}
+                    {f.opt && <span className="text-dark-400 font-normal text-xs">(tùy chọn)</span>}
                   </label>
                   <input
                     required={f.req}
@@ -69,25 +69,25 @@ export default function ConsultModal({ building, onClose }) {
                     value={form[f.key]}
                     onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.ph}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 outline-none transition-all hover:border-gray-300"
+                    className="w-full border border-dark-200 px-4 py-3 text-sm focus:ring-1 focus:ring-primary-400/30 focus:border-primary-400 outline-none transition-all hover:border-dark-300 font-body"
                   />
                 </div>
               ))}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Lời nhắn</label>
+                <label className="block text-sm font-semibold text-dark-700 mb-1.5 font-body">Lời nhắn</label>
                 <textarea
                   value={form.message}
                   onChange={(e) => setForm((p) => ({ ...p, message: e.target.value }))}
                   placeholder="Tôi muốn thuê văn phòng tầng 3..."
                   rows={3}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 outline-none resize-none transition-all hover:border-gray-300"
+                  className="w-full border border-dark-200 px-4 py-3 text-sm focus:ring-1 focus:ring-primary-400/30 focus:border-primary-400 outline-none resize-none transition-all hover:border-dark-300 font-body"
                 />
               </div>
-              {error && <p className="text-red-500 text-sm bg-red-50 p-3 rounded-xl">{error}</p>}
+              {error && <p className="text-red-500 text-sm bg-red-50 p-3 font-body">{error}</p>}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-gradient-to-r from-primary-500 via-primary-600 to-secondary-500 text-white rounded-xl font-bold text-sm hover:shadow-xl hover:shadow-primary-200 disabled:opacity-60 transition-all duration-300 hover:-translate-y-0.5"
+                className="w-full py-3.5 bg-dark-800 text-white font-semibold text-sm hover:bg-primary-500 disabled:opacity-60 transition-all duration-300 font-body"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-2">

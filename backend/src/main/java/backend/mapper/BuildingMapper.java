@@ -4,6 +4,7 @@ import backend.dto.request.BuildingCreationRequest;
 import backend.dto.request.BuildingUpdateRequest;
 import backend.dto.response.BuildingResponse;
 import backend.entity.Building;
+import backend.entity.BuildingImage;
 import backend.entity.District;
 import backend.entity.RentArea;
 import backend.entity.RentType;
@@ -12,6 +13,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,12 +30,14 @@ public interface BuildingMapper {
     @Mapping(target = "rentAreas", ignore = true)
     @Mapping(target = "rentTypes", ignore = true)
     @Mapping(target = "assignedUsers", ignore = true)
+    @Mapping(target = "images", ignore = true)
     Building toBuilding(BuildingCreationRequest request);
 
     @Mapping(target = "district", expression = "java(mapDistrictToInfo(building.getDistrict()))")
     @Mapping(target = "rentTypes", expression = "java(mapRentTypesToInfo(building.getRentTypes()))")
     @Mapping(target = "rentAreas", expression = "java(mapRentAreasToInfo(building.getRentAreas()))")
     @Mapping(target = "assignedStaff", expression = "java(mapUsersToStaffInfo(building.getAssignedUsers()))")
+    @Mapping(target = "images", expression = "java(mapBuildingImages(building.getImages()))")
     BuildingResponse toBuildingResponse(Building building);
 
     @Mapping(target = "id", ignore = true)
@@ -44,6 +49,7 @@ public interface BuildingMapper {
     @Mapping(target = "rentAreas", ignore = true)
     @Mapping(target = "rentTypes", ignore = true)
     @Mapping(target = "assignedUsers", ignore = true)
+    @Mapping(target = "images", ignore = true)
     void updateBuilding(@MappingTarget Building building, BuildingUpdateRequest request);
 
     // Helper methods
@@ -92,6 +98,15 @@ public interface BuildingMapper {
                         .username(user.getUsername())
                         .build())
                 .collect(Collectors.toSet());
+    }
+
+    default List<String> mapBuildingImages(List<BuildingImage> images) {
+        if (images == null) {
+            return Collections.emptyList();
+        }
+        return images.stream()
+                .map(BuildingImage::getUrl)
+                .collect(Collectors.toList());
     }
 }
 
